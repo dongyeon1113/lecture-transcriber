@@ -1,0 +1,14 @@
+# Models are downloaded by the install scripts
+models/
+
+# Runtime files
+.lock/
+*.log
+.DS_Store
+
+# Never commit lecture recordings or transcripts (copyrighted)
+*.mp4
+*.m4a
+*.mov
+*.wav
+*.txt
