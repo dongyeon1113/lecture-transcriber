@@ -1,0 +1,4 @@
+jiwer==4.0.0
+numpy==2.0.2
+soundfile==0.13.1
+whisper_normalizer==0.1.15

@@ -1,0 +1,304 @@
+{
+ "rows": {
+  "ko-00.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-00.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-00.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-01.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-01.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-01.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-02.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-02.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-02.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-03.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-03.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-03.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-04.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-04.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-04.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-05.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-05.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-05.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-06.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-06.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-06.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-07.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-07.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-07.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-08.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-08.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-08.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-09.wav": {
+   "label": "ko",
+   "first30": "ko",
+   "vote3": "ko",
+   "votes": [
+    "ko",
+    "ko",
+    "ko"
+   ]
+  },
+  "en-09.wav": {
+   "label": "en",
+   "first30": "en",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  },
+  "ko-intro-en-09.wav": {
+   "label": "en",
+   "first30": "ko",
+   "vote3": "en",
+   "votes": [
+    "en",
+    "en",
+    "en"
+   ]
+  }
+ }
+}

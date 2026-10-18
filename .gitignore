@@ -12,3 +12,10 @@ models/
 *.mov
 *.wav
 *.txt
+
+# Benchmark: downloaded data, generated audio, scratch output
+benchmark/.venv/
+benchmark/data/
+benchmark/sets/
+benchmark/work/
+!benchmark/requirements.txt
