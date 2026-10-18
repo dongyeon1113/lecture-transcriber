@@ -3,7 +3,7 @@
 # 감시 폴더에 들어온 영상/음성 파일을 텍스트(.txt)로 변환한다.
 # - 같은 이름의 .txt 가 이미 있으면 건너뜀
 # - 한국어/영어 자동 판별 (영상 25/50/75% 지점 다수결)
-# - 엔진: whisper.cpp (Metal GPU) + Silero VAD
+# - 엔진: whisper.cpp (Metal GPU) + Silero VAD (설정 근거: benchmark/RESULTS.md)
 #     한국어: large-v3-turbo (빠름)   영어: large-v3 (긴 음성 영어 정확도 최상)
 set -u
 
@@ -20,6 +20,8 @@ SPEED_KO=12
 SPEED_EN=4
 [ "$MODEL_EN" = "$MODEL_KO" ] && SPEED_EN=$SPEED_KO
 VAD_MODEL="$ROOT/models/ggml-silero-v5.1.2.bin"
+# VAD 민감도 0.35 / 앞뒤 여유 200ms / 최소 침묵 300ms — 기본값(0.5/30ms/100ms)은 말소리 일부를 잘라냄
+VAD_FLAGS=(--vad -vm "$VAD_MODEL" -vt 0.35 -vp 200 -vsd 300)
 LOG="$HOME/Library/Logs/lecture-transcriber.log"
 LOCK="$ROOT/.lock"
 TMP="${TMPDIR:-/tmp}/transcribe-$$"
@@ -52,8 +54,8 @@ wait_stable() {
 detect_lang() {
   local wav="$1" fr en=0 lang
   for fr in 0.25 0.5 0.75; do
-    /usr/bin/python3 -I "$ROOT/macos/cut.py" "$wav" "$TMP/clip.wav" "$fr" 30 2>>"$LOG" || continue
-    lang=$(whisper-cli -m "$MODEL_KO" -l auto -dl --vad -vm "$VAD_MODEL" -f "$TMP/clip.wav" 2>&1 |
+    /usr/bin/python3 -I "$ROOT/macos/wavtool.py" cut "$wav" "$TMP/clip.wav" "$fr" 30 2>>"$LOG" || continue
+    lang=$(whisper-cli -m "$MODEL_KO" -l auto -dl "${VAD_FLAGS[@]}" -f "$TMP/clip.wav" 2>&1 |
            sed -n 's/.*auto-detected language: \([a-z]*\).*/\1/p')
     log "  언어 판별 ${fr}: ${lang:-?}"
     [ "$lang" = "en" ] && en=$((en + 1))
@@ -83,7 +85,11 @@ transcribe() {
     fi
   fi
 
-  # 2) 언어 판별 후 모델 선택
+  # 2) 작게 녹음된 파일은 음량을 키움 (VAD 가 작은 목소리를 놓치지 않도록)
+  /usr/bin/python3 -I "$ROOT/macos/wavtool.py" level "$wav" "$TMP/level.wav" >>"$LOG" 2>&1 &&
+    mv "$TMP/level.wav" "$wav"
+
+  # 3) 언어 판별 후 모델 선택
   local lang model label speed dur
   lang=$(detect_lang "$wav")
   if [ "$lang" = en ]; then
@@ -95,9 +101,9 @@ transcribe() {
   dur=$(afinfo "$wav" 2>/dev/null | awk '/estimated duration/ {printf "%d", $3}')
   notify "변환 시작 ($label): $(basename "$src") — 약 $(( ${dur:-0} / speed / 60 + 1 ))분 예상"
 
-  # 3) 음성 인식
+  # 4) 음성 인식 (-mc 0: 앞 문장 문맥을 안 넘겨서 같은 문장 반복 환각 방지)
   if ! whisper-cli -m "$model" -l "$lang" -t 8 \
-        --vad -vm "$VAD_MODEL" \
+        "${VAD_FLAGS[@]}" \
         -mc 0 -sns \
         -otxt -of "$TMP/out" -f "$wav" -np >>"$LOG" 2>&1; then
     log "실패(음성 인식): $(basename "$src")"
@@ -105,7 +111,7 @@ transcribe() {
     return 1
   fi
 
-  # 4) 앞뒤 공백 정리 후 저장
+  # 5) 앞뒤 공백 정리 후 저장
   sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' "$TMP/out.txt" > "$base.txt"
   rm -f "$wav" "$TMP/out.txt" "$TMP/audio.m4a"
 
