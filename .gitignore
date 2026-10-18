@@ -19,3 +19,6 @@ benchmark/data/
 benchmark/sets/
 benchmark/work/
 !benchmark/requirements.txt
+!macos/requirements.txt
+.venv/
+benchmark/.venv-mlx/
