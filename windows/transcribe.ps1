@@ -18,8 +18,8 @@ if ($Base -match '[^\x00-\x7F]') { $Base = Join-Path $env:PUBLIC 'lecture-transc
 $Config  = Get-Content (Join-Path $Base 'config.json') -Raw | ConvertFrom-Json
 $Whisper = $Config.whisper
 $Ffmpeg  = $Config.ffmpeg
-$ModelKo = [IO.Path]::Combine($Base, 'models', 'ggml-large-v3-turbo.bin')
-$ModelEn = [IO.Path]::Combine($Base, 'models', $Config.englishModel)
+# 한국어·영어 공통 (벤치마크에서 영어도 large-v3 와 정확도 동일, 2.5배 빠름)
+$Model   = [IO.Path]::Combine($Base, 'models', 'ggml-large-v3-turbo.bin')
 $Vad     = [IO.Path]::Combine($Base, 'models', 'ggml-silero-v5.1.2.bin')
 # VAD 민감도 0.35 / 앞뒤 여유 200ms / 최소 침묵 300ms — 기본값(0.5/30ms/100ms)은 말소리 일부를 잘라냄
 $VadArgs = @('--vad', '-vm', $Vad, '-vt', '0.35', '-vp', '200', '-vsd', '300')
@@ -72,7 +72,7 @@ function Detect-Lang([string]$wav, [double]$dur) {
     Remove-Item -LiteralPath $clip -ErrorAction SilentlyContinue
     if (-not (Run $Ffmpeg @('-nostdin', '-hide_banner', '-loglevel', 'error', '-y',
                            '-ss', "$ss", '-t', '30', '-i', $wav, $clip))) { continue }
-    [void](Run $Whisper (@('-m', $ModelKo, '-l', 'auto', '-dl', '-t', $Threads, '-f', $clip) + $VadArgs))
+    [void](Run $Whisper (@('-m', $Model, '-l', 'auto', '-dl', '-t', $Threads, '-f', $clip) + $VadArgs))
     $m = $script:out | Select-String 'auto-detected language: ([a-z]+)' | Select-Object -First 1
     $lang = if ($m) { $m.Matches[0].Groups[1].Value } else { '?' }
     Log "  언어 판별 ${fr}: $lang"
@@ -80,6 +80,27 @@ function Detect-Lang([string]$wav, [double]$dur) {
   }
   Remove-Item -LiteralPath $clip -ErrorAction SilentlyContinue
   if ($en -ge 2) { 'en' } else { 'ko' }
+}
+
+# 30초 단위로 끊긴 줄을 한 줄에 한 문장으로 정리, 영어는 문장 첫 글자 대문자 (macos/textfmt.py 와 같은 규칙)
+$Abbrev = @('mr', 'mrs', 'ms', 'dr', 'prof', 'st', 'vs', 'etc', 'e.g', 'i.e', 'jr', 'sr', 'no', 'fig', 'u.s')
+function Format-Sentences([string[]]$lines, [string]$lang) {
+  $text = (@($lines | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ' ') -replace '\s+', ' '
+  $out = New-Object System.Collections.Generic.List[string]
+  $start = 0
+  foreach ($m in [regex]::Matches($text, '[.?!]+["'')\]]*\s+')) {
+    $chunk = $text.Substring($start, $m.Index - $start).Trim()
+    $word = if ($chunk) { ($chunk -split '\s+')[-1].ToLower().TrimEnd('.') } else { '' }
+    if ($Abbrev -contains $word) { continue }
+    $out.Add($text.Substring($start, $m.Index + $m.Length - $start).Trim())
+    $start = $m.Index + $m.Length
+  }
+  if ($text.Substring($start).Trim()) { $out.Add($text.Substring($start).Trim()) }
+  if ($lang -eq 'en') {
+    $cap = [Text.RegularExpressions.MatchEvaluator] { param($c) $c.Groups[1].Value + $c.Groups[2].Value.ToUpper() }
+    for ($i = 0; $i -lt $out.Count; $i++) { $out[$i] = [regex]::Replace($out[$i], '^(["''(]*)([a-z])', $cap) }
+  }
+  return ,$out.ToArray()
 }
 
 function Transcribe([string]$src) {
@@ -117,24 +138,24 @@ function Transcribe([string]$src) {
     }
   }
 
-  # 3) 언어 판별 후 모델 선택
+  # 3) 언어 판별
   $dur = ((Get-Item -LiteralPath $wav).Length - 44) / 32000
   $lang = Detect-Lang $wav $dur
-  if ($lang -eq 'en') { $model = $ModelEn; $label = '영어' } else { $model = $ModelKo; $label = '한국어' }
-  Log "  언어: $label / 모델: $([IO.Path]::GetFileName($model))"
+  $label = if ($lang -eq 'en') { '영어' } else { '한국어' }
+  Log "  언어: $label"
   Notify "변환 시작 ($label): $name"
 
   # 4) 음성 인식 (-mc 0: 앞 문장 문맥을 안 넘겨서 같은 문장 반복 환각 방지)
   Remove-Item -LiteralPath "$outBase.txt" -ErrorAction SilentlyContinue
-  if (-not (Run $Whisper (@('-m', $model, '-l', $lang, '-t', $Threads, '-mc', '0', '-sns',
+  if (-not (Run $Whisper (@('-m', $Model, '-l', $lang, '-t', $Threads, '-mc', '0', '-sns',
                            '-otxt', '-of', $outBase, '-f', $wav, '-np') + $VadArgs))) {
     Log "실패(음성 인식): $name"
     Notify "실패: $name"
     return $false
   }
 
-  # 5) 앞뒤 공백 정리 후 저장 (메모장 호환을 위해 UTF-8 BOM)
-  $lines = @(Get-Content -LiteralPath "$outBase.txt" -Encoding UTF8 | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+  # 5) 한 줄에 한 문장으로 정리해서 저장 (메모장 호환을 위해 UTF-8 BOM)
+  $lines = Format-Sentences @(Get-Content -LiteralPath "$outBase.txt" -Encoding UTF8) $lang
   [IO.File]::WriteAllLines($txt, [string[]]$lines, (New-Object Text.UTF8Encoding($true)))
   Remove-Item -LiteralPath $wav, "$outBase.txt" -ErrorAction SilentlyContinue
 

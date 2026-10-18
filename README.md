@@ -12,6 +12,7 @@ Drop a lecture video into a folder and get a text transcript next to it. Everyth
 - **Korean / English auto-detection:** the language is detected from the *middle* of the recording, so a Korean greeting before an English lecture doesn't fool it. It was right on 30/30 test recordings; Whisper's built-in detection got 20/30.
 - **Built for long recordings:** in our benchmark, plain whisper.cpp hit 21% WER on a 27-minute lecture-style recording because it hallucinated repeated sentences. This project's settings get **5.5%**.
 - **Handles quiet recordings:** quiet audio is boosted automatically, so the speech detector doesn't throw away soft-spoken lectures.
+- **Readable output:** one sentence per line, with punctuation, instead of Whisper's raw 30-second fragments.
 - **Private:** no cloud APIs, nothing leaves your machine.
 - **macOS and Windows.**
 
@@ -32,7 +33,7 @@ cd lecture-transcriber
 
 The installer:
 1. installs `whisper.cpp` via Homebrew
-2. downloads the models (~4.7 GB) with resume support and SHA-256 checks
+2. downloads the models (~1.6 GB) with resume support and SHA-256 checks
 3. registers a `launchd` agent that watches the folder (it survives reboots)
 
 ### Windows 10/11
@@ -49,8 +50,6 @@ The installer:
 2. downloads the official `whisper.cpp` Windows build. It picks the **CUDA** build when an NVIDIA GPU is present and checks that it actually runs. Otherwise it uses the CPU build.
 3. downloads the models, with SHA-256 checks
 4. adds a hidden watcher to the Startup folder (it survives reboots)
-
-> On CPU-only Windows machines, English also uses `large-v3-turbo`, because `large-v3` is too slow without a GPU.
 
 ## Usage
 
@@ -72,7 +71,7 @@ The installer:
 powershell -ExecutionPolicy Bypass -File windows\uninstall.ps1
 ```
 
-This stops the watcher. Your transcripts and the downloaded models are left in place; delete `models/` (macOS) or `%LOCALAPPDATA%\lecture-transcriber` (Windows) to reclaim disk space.
+This stops the watcher. Your transcripts and the downloaded models are left in place; delete `models/` (macOS) or `%LOCALAPPDATA%\lecture-transcriber` (Windows) to reclaim disk space (~1.6 GB).
 
 ## How it works
 
@@ -84,10 +83,11 @@ new file in inbox
   └─ language detection
        cut 30 s clips at 25 % / 50 % / 75 % of the recording
        run Whisper language ID on each → majority vote (en / ko)
-  └─ transcribe with whisper.cpp
-       ko → large-v3-turbo   en → large-v3
+  └─ transcribe with whisper.cpp, large-v3-turbo for both languages
        -mc 0       no text context between 30 s windows (stops repetition loops)
        Silero VAD  threshold 0.35, 200 ms padding, 300 ms min silence
+  └─ re-flow Whisper's 30 s fragments into one sentence per line
+     (English: capitalise sentence starts; abbreviations such as "Mr." and "U.S." are not split)
   └─ write <name>.txt next to the video, notify, open it
 ```
 
@@ -118,7 +118,7 @@ new file in inbox
 
 **4. Whisper's built-in language detection only listens to the first 30 seconds** (`--offset-t` does not change this). On English lectures that open with a 40-second Korean introduction it was wrong 10/10 times. Voting over three clips from the middle was right 30/30 times across Korean, English and Korean-intro recordings.
 
-**5. `large-v3` vs `large-v3-turbo`:** on these sets the two are within noise of each other. Short-form English WER was 4.64% vs 4.87%, with overlapping 95% confidence intervals, and long-form English was 5.55% vs 5.50%. Turbo is about 2.5× faster.
+**5. `large-v3` vs `large-v3-turbo`:** on these sets the two are within noise of each other. Short-form English WER was 4.64% vs 4.87%, with overlapping 95% confidence intervals, and long-form English was 5.55% vs 5.50%. Turbo is about 2.5× faster, so the program now uses turbo for both languages. English originally used `large-v3`.
 
 Caveats: FLEURS is read speech, and the long recordings are built from it, so they are not real lectures. Each configuration was run once. Korean CER also counts number formatting as errors ("네 가지" vs "4가지").
 
@@ -126,7 +126,7 @@ Reproduce it:
 
 ```bash
 cd benchmark
-./download.sh                                      # FLEURS ko/en test split (~500 MB)
+./download.sh                                      # FLEURS ko/en test split (~500 MB) + large-v3 for comparison (~3.1 GB)
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python prepare.py                        # builds the test sets (deterministic)
 .venv/bin/python run.py                            # ~1.5 h on an M2; writes RESULTS.md
@@ -137,14 +137,16 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 **Why whisper.cpp + Whisper instead of newer models?** (surveyed October 2026)
 - **NVIDIA Parakeet** is far faster on Apple Silicon, but it supports only European languages, so it has no Korean.
 - **Qwen3-ASR 1.7B** had a slightly lower Korean CER in one small external test: 3.34 vs 4.60 for turbo on 60 FLEURS utterances. The confidence intervals overlap, and it needs a multi-GB PyTorch stack. whisper.cpp is a single native binary with GPU acceleration on both platforms.
-- On the [Open ASR Leaderboard](https://huggingface.co/blog/open-asr-leaderboard) long-form track, Whisper `large-v3` is the most accurate open model for English (WER 6.43 vs 6.68 for Parakeet CTC 1.1B). That is why English uses it. In our own benchmark, turbo matched it (finding 5 above).
+- On the [Open ASR Leaderboard](https://huggingface.co/blog/open-asr-leaderboard) long-form track, Whisper `large-v3` is the most accurate open model for English (WER 6.43 vs 6.68 for Parakeet CTC 1.1B), so it was the original choice for English. Our own benchmark found that `large-v3-turbo` matches it on lecture-style audio at 2.5× the speed (finding 5 above), so turbo is now used everywhere.
+
+**Why not prompt Whisper for punctuation?** An initial prompt such as "Hello, everyone. Welcome to today's lecture." is the usual trick, but it is dropped when `-mc 0` is set. With a small context (`-mc 32`) plus `--carry-initial-prompt`, English punctuation barely changed and Korean CER rose from 3.3% to 8.9%. With turbo, punctuation density already matches the references: 11.7 vs 11.0 marks per 100 words. About 3% of lines can still come out unpunctuated when Whisper switches style for one 30-second window.
 
 **Windows paths:** whisper.cpp can fail to open non-ASCII paths on Windows (for example a Korean user name). Models and temp files are therefore kept in an ASCII-only directory, and only ffmpeg touches the original file name.
 
 ## Status
 
-- **macOS:** tested end-to-end on Apple Silicon, including the folder watcher, Korean/English detection, volume normalisation and the failure handling.
-- **Windows:** `transcribe.ps1` was run end-to-end on macOS with PowerShell 7 and a real ffmpeg, covering volume normalisation, language detection, Unicode and bracketed file names, and the failure marker. The installer, toasts and the Startup watcher have **not yet been run on real Windows hardware.** Issues and PRs are welcome.
+- **macOS:** tested end-to-end on Apple Silicon, including the folder watcher, Korean/English detection, volume normalisation, sentence re-flow and the failure handling.
+- **Windows:** `transcribe.ps1` was run end-to-end on macOS with PowerShell 7 and a real ffmpeg, covering volume normalisation, language detection, sentence re-flow (byte-identical to the macOS output), Unicode and bracketed file names, and the failure marker. The installer, toasts and the Startup watcher have **not yet been run on real Windows hardware.** Issues and PRs are welcome.
 
 ## Note
 

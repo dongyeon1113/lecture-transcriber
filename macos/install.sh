@@ -14,7 +14,7 @@ command -v brew >/dev/null || { echo "Homebrew is required: https://brew.sh" >&2
 echo "==> Installing whisper.cpp"
 command -v whisper-cli >/dev/null || brew install whisper.cpp
 
-echo "==> Downloading models (~4.7 GB)"
+echo "==> Downloading models (~1.6 GB)"
 "$ROOT/macos/download-models.sh"
 
 echo "==> Registering folder watcher"

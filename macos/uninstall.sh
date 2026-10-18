@@ -3,4 +3,4 @@
 LABEL="com.lecture-transcriber"
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null
 rm -f "$HOME/Library/LaunchAgents/$LABEL.plist"
-echo "Folder watcher removed. Delete models/ to free ~4.7 GB."
+echo "Folder watcher removed. Delete models/ to free disk space (~1.6 GB, or ~4.7 GB if you ran the benchmark)."

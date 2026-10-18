@@ -15,7 +15,6 @@ $Builds = @{
 $HF = 'https://huggingface.co'
 $Models = @{
   'ggml-large-v3-turbo.bin' = @("$HF/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin", '1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69')
-  'ggml-large-v3.bin'       = @("$HF/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",       '64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2')
   'ggml-silero-v5.1.2.bin'  = @("$HF/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin",    '29940d98d42b91fbd05ce489f3ecf7c72f0a42f027e4875919a28fb4c04ea2cf')
 }
 
@@ -101,15 +100,7 @@ if ($kind -eq 'cuda') {
 }
 Write-Host "  $kind build: $whisper"
 
-# 영어 최고정확도 모델(large-v3)은 GPU 에서만 실용적인 속도라 GPU 일 때만 사용
-if ($kind -eq 'cuda') {
-  Download $Models['ggml-large-v3.bin'][0] "$Base\models\ggml-large-v3.bin" $Models['ggml-large-v3.bin'][1]
-  $englishModel = 'ggml-large-v3.bin'
-} else {
-  $englishModel = 'ggml-large-v3-turbo.bin'
-}
-
-@{ whisper = $whisper; ffmpeg = $ffmpeg; englishModel = $englishModel; build = $kind } |
+@{ whisper = $whisper; ffmpeg = $ffmpeg; build = $kind } |
   ConvertTo-Json | Set-Content -Path "$Base\config.json" -Encoding UTF8
 
 Write-Host '==> Registering folder watcher (runs at logon)'

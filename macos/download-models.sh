@@ -1,5 +1,6 @@
 #!/bin/bash
 # Whisper / VAD 모델을 models/ 에 받는다. 끊겨도 이어받기, 받은 뒤 SHA-256 검증.
+# 사용법: download-models.sh [추가 모델 파일명...]   (기본: turbo + VAD, large-v3 는 벤치마크용)
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/models"
@@ -12,8 +13,10 @@ MODELS=(
   "ggml-silero-v5.1.2.bin https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin 29940d98d42b91fbd05ce489f3ecf7c72f0a42f027e4875919a28fb4c04ea2cf"
 )
 
+WANT=" ggml-large-v3-turbo.bin ggml-silero-v5.1.2.bin $* "
 for entry in "${MODELS[@]}"; do
   read -r name url sha <<< "$entry"
+  [[ "$WANT" == *" $name "* ]] || continue
   if [ -f "$DIR/$name" ]; then
     echo "✓ $name (already downloaded)"
     continue
