@@ -17,6 +17,12 @@ command -v whisper-cli >/dev/null || brew install whisper.cpp
 echo "==> Downloading models (~1.6 GB)"
 "$ROOT/macos/download-models.sh"
 
+echo "==> Installing Qwen3-ASR for English lectures (Python 3.12 + MLX, ~3.8 GB model)"
+command -v uv >/dev/null || brew install uv
+uv venv -q --allow-existing --python 3.12 "$ROOT/.venv"
+uv pip install -q --python "$ROOT/.venv/bin/python" -r "$ROOT/macos/requirements.txt"
+"$ROOT/.venv/bin/python" "$ROOT/macos/qwen_asr.py" --download
+
 echo "==> Registering folder watcher"
 mkdir -p "$INBOX" "$HOME/Library/LaunchAgents"
 INBOX="$(cd "$INBOX" && pwd)"

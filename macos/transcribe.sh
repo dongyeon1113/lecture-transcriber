@@ -3,8 +3,9 @@
 # 감시 폴더에 들어온 영상/음성 파일을 텍스트(.txt)로 변환한다.
 # - 같은 이름의 .txt 가 이미 있으면 건너뜀
 # - 한국어/영어 자동 판별 (영상 25/50/75% 지점 다수결)
-# - 엔진: whisper.cpp (Metal GPU) + Silero VAD (설정 근거: benchmark/RESULTS.md)
-#     모델: large-v3-turbo (한국어·영어 공통 — 벤치마크에서 영어도 large-v3 와 정확도 동일, 2.5배 빠름)
+# - 한국어: whisper.cpp large-v3-turbo (Metal GPU) + Silero VAD (설정 근거: benchmark/RESULTS.md)
+# - 영어:   Qwen3-ASR 1.7B (MLX) — whisper turbo 보다 오류 적음 (benchmark/RESULTS-english.md)
+#           설치 안 됐거나 실패하면 whisper.cpp turbo 로 대신 처리
 set -u
 
 export PATH="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -12,8 +13,10 @@ export PATH="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 INBOX="${1:?usage: transcribe.sh <inbox folder>}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"   # 레포 루트
 MODEL="$ROOT/models/ggml-large-v3-turbo.bin"
+QWEN_PY="$ROOT/.venv/bin/python"                      # install.sh 가 만든 Qwen3-ASR 실행 환경
 # 예상 시간 계산용 배속 (M2 실측)
 SPEED=15
+SPEED_QWEN=3
 VAD_MODEL="$ROOT/models/ggml-silero-v5.1.2.bin"
 # VAD 민감도 0.35 / 앞뒤 여유 200ms / 최소 침묵 300ms — 기본값(0.5/30ms/100ms)은 말소리 일부를 잘라냄
 VAD_FLAGS=(--vad -vm "$VAD_MODEL" -vt 0.35 -vp 200 -vsd 300)
@@ -85,15 +88,22 @@ transcribe() {
     mv "$TMP/level.wav" "$wav"
 
   # 3) 언어 판별
-  local lang label dur
+  local lang label dur speed=$SPEED use_qwen=0
   lang=$(detect_lang "$wav")
   if [ "$lang" = en ]; then label="영어"; else label="한국어"; fi
-  log "  언어: $label"
+  if [ "$lang" = en ] && [ -x "$QWEN_PY" ]; then use_qwen=1; speed=$SPEED_QWEN; fi
+  log "  언어: $label / 엔진: $([ $use_qwen = 1 ] && echo Qwen3-ASR || echo whisper.cpp)"
   dur=$(afinfo "$wav" 2>/dev/null | awk '/estimated duration/ {printf "%d", $3}')
-  notify "변환 시작 ($label): $(basename "$src") — 약 $(( ${dur:-0} / SPEED / 60 + 1 ))분 예상"
+  notify "변환 시작 ($label): $(basename "$src") — 약 $(( ${dur:-0} / speed / 60 + 1 ))분 예상"
 
-  # 4) 음성 인식 (-mc 0: 앞 문장 문맥을 안 넘겨서 같은 문장 반복 환각 방지)
-  if ! whisper-cli -m "$MODEL" -l "$lang" -t 8 \
+  # 4) 음성 인식
+  #    영어: Qwen3-ASR (실패하면 아래 whisper 로 대신 처리)
+  if [ $use_qwen = 1 ] && ! "$QWEN_PY" "$ROOT/macos/qwen_asr.py" "$wav" "$TMP/out.txt" >>"$LOG" 2>&1; then
+    log "  Qwen3-ASR 실패 → whisper.cpp 로 대신 처리"
+    use_qwen=0
+  fi
+  #    한국어 (또는 대체): whisper.cpp, -mc 0 = 앞 문장 문맥을 안 넘겨서 같은 문장 반복 환각 방지
+  if [ $use_qwen = 0 ] && ! whisper-cli -m "$MODEL" -l "$lang" -t 8 \
         "${VAD_FLAGS[@]}" \
         -mc 0 -sns \
         -otxt -of "$TMP/out" -f "$wav" -np >>"$LOG" 2>&1; then
