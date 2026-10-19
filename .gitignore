@@ -22,3 +22,4 @@ benchmark/work/
 !macos/requirements.txt
 .venv/
 benchmark/.venv-mlx/
+!glossary/*.txt

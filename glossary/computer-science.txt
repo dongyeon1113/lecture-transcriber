@@ -1,0 +1,317 @@
+# 영어 컴퓨터공학 강의용 용어집 — Qwen3-ASR 에 "이 녹음에 나올 수 있는 단어"로 전달된다.
+# 한 줄에 하나. '#' 뒤는 무시. 음성인식이 자주 틀리는 전문용어·약어·API 이름 위주로 넣는다.
+# 과목별 용어는 이 폴더에 .txt 파일을 하나 더 만들어 넣으면 함께 쓰인다.
+
+# --- Operating systems ---
+operating system
+kernel
+system call
+process
+thread
+multithreaded
+program counter
+fetch
+context switch
+thread control block
+process control block
+address space
+virtual memory
+page table
+page fault
+TLB
+paging
+segmentation
+swap
+mmap
+fork
+exec
+clone
+wait
+exit
+zombie process
+orphan process
+scheduler
+round-robin
+preemption
+time slice
+interrupt
+trap
+user mode
+kernel mode
+concurrency
+parallelism
+race condition
+critical section
+mutual exclusion
+mutex
+semaphore
+spinlock
+lock
+unlock
+trylock
+timedlock
+condition variable
+deadlock
+livelock
+starvation
+atomic
+test-and-set
+compare-and-swap
+producer-consumer
+bounded buffer
+readers-writers
+dining philosophers
+Dijkstra
+pthread
+pthread_create
+pthread_join
+pthread_mutex_lock
+pthread_mutex_unlock
+pthread_cond_wait
+pthread_cond_signal
+POSIX
+thread pool
+OpenMP
+pragma
+Valgrind
+Helgrind
+I/O
+DMA
+file system
+inode
+journaling
+RAID
+SSD
+HDD
+cache
+cache miss
+LRU
+FIFO
+working set
+thrashing
+heap
+stack
+stack pointer
+malloc
+free
+segmentation fault
+signal handler
+IPC
+pipe
+socket
+shared memory
+message passing
+Linux
+Unix
+macOS
+Windows
+Solaris
+
+# --- Computer architecture ---
+CPU
+GPU
+ALU
+register
+EAX
+x86
+ARM
+RISC-V
+MIPS
+instruction set
+pipeline
+branch prediction
+out-of-order execution
+superscalar
+multicore
+hyperthreading
+SIMD
+memory hierarchy
+L1 cache
+L2 cache
+DRAM
+SRAM
+bus
+clock cycle
+latency
+throughput
+bandwidth
+endianness
+little-endian
+big-endian
+two's complement
+floating point
+IEEE 754
+assembly
+opcode
+
+# --- Data structures & algorithms ---
+algorithm
+data structure
+array
+linked list
+stack
+queue
+deque
+priority queue
+heap
+binary tree
+binary search tree
+AVL tree
+red-black tree
+B-tree
+trie
+hash table
+hash function
+graph
+adjacency list
+adjacency matrix
+breadth-first search
+BFS
+depth-first search
+DFS
+Dijkstra's algorithm
+Bellman-Ford
+Floyd-Warshall
+minimum spanning tree
+Kruskal
+Prim
+topological sort
+dynamic programming
+memoization
+greedy algorithm
+divide and conquer
+recursion
+quicksort
+mergesort
+heapsort
+binary search
+Big-O
+time complexity
+space complexity
+amortized
+NP-complete
+NP-hard
+
+# --- Programming languages & compilers ---
+compiler
+interpreter
+linker
+loader
+GCC
+Clang
+LLVM
+lexer
+parser
+abstract syntax tree
+AST
+bytecode
+JVM
+garbage collection
+pointer
+dereference
+null pointer
+struct
+typedef
+void pointer
+function pointer
+header file
+macro
+C++
+Java
+Python
+JavaScript
+TypeScript
+Rust
+Go
+Kotlin
+Swift
+object-oriented
+polymorphism
+inheritance
+encapsulation
+lambda
+closure
+API
+SDK
+IDE
+Git
+GitHub
+debugger
+GDB
+
+# --- Networks ---
+TCP
+UDP
+IP
+IPv4
+IPv6
+TCP/IP
+HTTP
+HTTPS
+DNS
+DHCP
+NAT
+OSI model
+packet
+router
+switch
+latency
+handshake
+TLS
+SSL
+MAC address
+Ethernet
+Wi-Fi
+congestion control
+sliding window
+checksum
+
+# --- Databases ---
+database
+DBMS
+SQL
+NoSQL
+relational
+schema
+primary key
+foreign key
+index
+B+ tree
+transaction
+ACID
+commit
+rollback
+normalization
+join
+query
+
+# --- Security ---
+encryption
+decryption
+public key
+private key
+RSA
+AES
+SHA-256
+hash
+buffer overflow
+authentication
+authorization
+
+# --- AI / ML ---
+machine learning
+deep learning
+neural network
+CNN
+RNN
+LSTM
+transformer
+attention
+gradient descent
+backpropagation
+overfitting
+regularization
+PyTorch
+TensorFlow
+CUDA
+LLM

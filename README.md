@@ -11,6 +11,7 @@ Drop a lecture video into a folder and get a text transcript next to it. Everyth
 - **Zero-click:** a background watcher picks up new files automatically. You get a notification when a file starts and when it finishes, and the transcript opens on its own.
 - **Korean / English auto-detection:** the language is detected from the *middle* of the recording, so a Korean greeting before an English lecture doesn't fool it. It was right on 30/30 test recordings; Whisper's built-in detection got 20/30.
 - **Best measured model per language:** Korean uses Whisper `large-v3-turbo`. English uses **Qwen3-ASR 1.7B** on macOS. We compared five current open models on 4 hours of full-length English recordings, and Qwen3-ASR made **30% fewer errors** than Whisper on TED talks (WER 2.12% vs 3.04%) and was better on 13 of 14 recordings.
+- **Knows computer-science vocabulary:** English lectures are transcribed with a ~300-term CS glossary (`glossary/computer-science.txt`): OS, architecture, algorithms, networks, databases, security and ML. On a real 59-minute operating-systems lecture, misheard technical terms fell from 39 to 22 (e.g. "Peter thread" → pthread, "less condition" → race condition, "thread pull" → thread pool). Add your own course terms as another `.txt` in `glossary/`.
 - **Built for long recordings:** in our benchmark, plain whisper.cpp hit 21% WER on a 27-minute lecture-style recording because it hallucinated repeated sentences. This project's settings get **5.5%**.
 - **Handles quiet recordings:** quiet audio is boosted automatically, so the speech detector doesn't throw away soft-spoken lectures.
 - **Readable output:** one sentence per line, with punctuation, instead of Whisper's raw 30-second fragments.
@@ -63,6 +64,7 @@ The installer:
 | Situation | What to do |
 |---|---|
 | Re-transcribe a file | Delete its `.txt` file. It is processed again automatically. |
+| Add course-specific terms (English) | Put a `.txt` file with one term per line in `glossary/`. All files there are used. |
 | A `file.mp4.failed` marker appeared | The file has no readable audio track. Delete the marker to retry. |
 | Check progress or errors | macOS: `~/Library/Logs/lecture-transcriber.log` · Windows: `%LOCALAPPDATA%\lecture-transcriber\transcribe.log` |
 
@@ -94,6 +96,7 @@ new file in inbox
        English on macOS: Qwen3-ASR 1.7B via mlx-audio
          speech segments from the same VAD, grouped into ≤30 s chunks that are cut at the
          longest pause (fewer sentences split mid-way); falls back to whisper.cpp on error
+         glossary/*.txt is passed as context ("hotwords") so CS terms are recognised
   └─ re-flow the fragments into one sentence per line
      (English: capitalise sentence starts; abbreviations such as "Mr." and "U.S." are not split)
   └─ write <name>.txt next to the video, notify, open it
@@ -150,6 +153,7 @@ All non-Whisper models get the same ≤30 s VAD chunks. Full table: [`benchmark/
 - **Qwen3-ASR beat Whisper on 13 of 14 recordings**, with 1 tie, and it is the model the app now uses for English.
 - **Most of the gap on TED comes from verbatim style.** Qwen3-ASR keeps repeated words ("in in a"), as the reference transcripts do, while Whisper tidies them away. On wrong words alone the two are close: 0.92% vs 0.87% on TED and 4.35% vs 4.47% on earnings calls. Qwen3-ASR also drops fewer passages and adds less spurious text.
 - **Trade-off:** Qwen3-ASR is about 3× slower than Whisper turbo, roughly 15–25 min for a 75-minute lecture on an M2.
+- **CS glossary:** passing the ~300-term glossary as context cut misheard technical terms on a 59-minute OS lecture from 39 to 22. Ordinary words not in the list were unaffected. On TED talks, where the glossary is irrelevant, WER stayed the same (2.12% → 2.14%, 4 talks better and 6 worse), so it does not make general speech worse. It costs about 20–40% more time (the list is re-read for every 30 s chunk); the 59-minute lecture took 11 min instead of 7.6.
 - **Not tested:** Cohere Transcribe (5.42% on the leaderboard) needs gated Hugging Face access. ARK-ASR-3B and Canary-Qwen 2.5B have no Apple Silicon runtime.
 
 Reproduce it:

@@ -21,6 +21,20 @@ MAX_CHUNK = 30.0
 ROOT = Path(__file__).resolve().parent.parent
 VAD = ROOT / "models" / "ggml-silero-v5.1.2.bin"
 VAD_ARGS = ["-vt", "0.35", "-vp", "200", "-vsd", "300"]   # macos/transcribe.sh 와 같은 설정
+GLOSSARY = ROOT / "glossary"                                # 전문용어 목록 (*.txt, 한 줄에 하나)
+
+
+def glossary_terms():
+    """glossary/*.txt 의 용어 (중복 제거, '#' 주석 무시). LT_NO_GLOSSARY=1 이면 사용 안 함."""
+    if os.environ.get("LT_NO_GLOSSARY") == "1":
+        return []
+    terms = []
+    for path in sorted(GLOSSARY.glob("*.txt")):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            term = line.split("#", 1)[0].strip()
+            if term and term not in terms:
+                terms.append(term)
+    return terms
 
 
 def download():
@@ -82,6 +96,7 @@ def transcribe(src, dst):
     from mlx_audio.stt import load
 
     model = load(snapshot_download(REPO, revision=REVISION))
+    hotwords = glossary_terms() or None               # 전문용어를 "이 녹음에 나올 수 있는 단어"로 알려줌
     audio, sr = sf.read(src, dtype="float32")
     assert sr == SR, sr
     lines = []
@@ -89,7 +104,7 @@ def transcribe(src, dst):
         piece = audio[int(s * SR):int(e * SR)]
         if len(piece) < SR // 4:
             continue
-        text = model.generate(piece, language="English").text.strip()
+        text = model.generate(piece, language="English", hotwords=hotwords).text.strip()
         if text:
             lines.append(text)
     Path(dst).write_text("\n".join(lines) + "\n", encoding="utf-8")

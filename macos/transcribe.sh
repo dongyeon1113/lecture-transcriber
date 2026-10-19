@@ -16,7 +16,7 @@ MODEL="$ROOT/models/ggml-large-v3-turbo.bin"
 QWEN_PY="$ROOT/.venv/bin/python"                      # install.sh 가 만든 Qwen3-ASR 실행 환경
 # 예상 시간 계산용 배속 (M2 실측)
 SPEED=15
-SPEED_QWEN=3
+SPEED_QWEN=5
 VAD_MODEL="$ROOT/models/ggml-silero-v5.1.2.bin"
 # VAD 민감도 0.35 / 앞뒤 여유 200ms / 최소 침묵 300ms — 기본값(0.5/30ms/100ms)은 말소리 일부를 잘라냄
 VAD_FLAGS=(--vad -vm "$VAD_MODEL" -vt 0.35 -vp 200 -vsd 300)

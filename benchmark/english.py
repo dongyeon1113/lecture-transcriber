@@ -48,6 +48,8 @@ MLX_MODELS = {
     "granite-5.0-turboctc": ("ibm-granite/granite-speech-5.0-470m-turboctc", {}),
     "granite-4.1-2b": ("ibm-granite/granite-speech-4.1-2b", {}),
     "qwen3-asr-1.7b": ("mlx-community/Qwen3-ASR-1.7B-bf16", {"language": "English"}),
+    # the app's configuration: glossary/*.txt passed as hotwords
+    "qwen3-asr-1.7b+glossary": ("mlx-community/Qwen3-ASR-1.7B-bf16", {"language": "English", "glossary": True}),
     "parakeet-tdt-0.6b-v2": ("mlx-community/parakeet-tdt-0.6b-v2", {}),
 }
 
@@ -122,6 +124,11 @@ _loaded = {}
 def run_mlx(name, wav):
     from mlx_audio.stt import load
     repo, kwargs = MLX_MODELS[name]
+    kwargs = dict(kwargs)
+    if kwargs.pop("glossary", False):
+        sys.path.insert(0, str(ROOT / "macos"))
+        import qwen_asr
+        kwargs["hotwords"] = qwen_asr.glossary_terms()
     if name not in _loaded:
         _loaded.clear()
         _loaded[name] = load(repo)

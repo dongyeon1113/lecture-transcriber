@@ -12,6 +12,7 @@ cut wherever 30 s was reached. *Wrong words* are substitutions; most deletions o
 |---|---|---|---|---|---|
 | qwen3-asr-1.7b-greedy-chunks | 2.06% | 0.93% | 0.72% | 0.41% | 4.9× |
 | qwen3-asr-1.7b | 2.12% | 0.92% | 0.79% | 0.41% | 4.8× |
+| qwen3-asr-1.7b+glossary | 2.14% | 0.98% | 0.66% | 0.50% | 3.8× |
 | whisper.cpp-turbo-pipeline | 3.04% | 0.87% | 1.82% | 0.36% | 10.2× |
 | granite-5.0-turboctc | 3.16% | 1.18% | 1.60% | 0.37% | 51.2× |
 | parakeet-tdt-0.6b-v2 | 3.18% | 0.99% | 1.81% | 0.38% | 29.7× |
