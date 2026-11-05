@@ -36,7 +36,7 @@ cd lecture-transcriber
 The installer:
 1. installs `whisper.cpp` via Homebrew
 2. downloads the Whisper and VAD models (~1.6 GB) with resume support and SHA-256 checks
-3. sets up Qwen3-ASR for English: installs `uv`, creates a Python 3.12 environment in `.venv/` with pinned `mlx-audio`, and downloads the model at a pinned revision (~3.8 GB)
+3. sets up Qwen3-ASR for English: installs `uv`, creates a Python 3.12 environment in `.venv/` with pinned `mlx-audio`, and downloads the model at a pinned revision into `models/` (~3.8 GB; kept out of `~/.cache` so cache cleaners don't remove it)
 4. registers a `launchd` agent that watches the folder (it survives reboots)
 
 ### Windows 10/11
@@ -77,7 +77,7 @@ The installer:
 powershell -ExecutionPolicy Bypass -File windows\uninstall.ps1
 ```
 
-This stops the watcher. Your transcripts and the downloaded models are left in place. To reclaim disk space on macOS, delete `models/` and `.venv/` (~1.6 GB) and the Qwen3-ASR model at `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-1.7B-bf16` (~3.8 GB). On Windows, delete `%LOCALAPPDATA%\lecture-transcriber`.
+This stops the watcher. Your transcripts and the downloaded models are left in place. To reclaim disk space on macOS, delete `models/` (Whisper, VAD and Qwen3-ASR models, ~5.4 GB) and `.venv/`. On Windows, delete `%LOCALAPPDATA%\lecture-transcriber`.
 
 ## How it works
 

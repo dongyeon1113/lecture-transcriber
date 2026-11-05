@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parent.parent
 VAD = ROOT / "models" / "ggml-silero-v5.1.2.bin"
 VAD_ARGS = ["-vt", "0.35", "-vp", "200", "-vsd", "300"]   # macos/transcribe.sh 와 같은 설정
 GLOSSARY = ROOT / "glossary"                                # 전문용어 목록 (*.txt, 한 줄에 하나)
+# 모델은 ~/.cache 가 아니라 레포의 models/ 에 둔다 (캐시 정리 도구가 ~/.cache 를 지워도 안전하도록)
+MODEL_DIR = ROOT / "models" / "Qwen3-ASR-1.7B-bf16"
 
 
 def glossary_terms():
@@ -43,7 +45,7 @@ def download():
     from huggingface_hub import snapshot_download
     for attempt in range(30):
         try:
-            return snapshot_download(REPO, revision=REVISION)
+            return snapshot_download(REPO, revision=REVISION, local_dir=MODEL_DIR)
         except Exception as e:  # 네트워크 오류
             print(f"  retrying ({type(e).__name__})", flush=True)
             time.sleep(5)
@@ -92,10 +94,11 @@ def chunks(wav):
 def transcribe(src, dst):
     os.environ["HF_HUB_OFFLINE"] = "1"               # 실행 중에는 네트워크 접속 안 함
     import soundfile as sf
-    from huggingface_hub import snapshot_download
     from mlx_audio.stt import load
 
-    model = load(snapshot_download(REPO, revision=REVISION))
+    if not (MODEL_DIR / "config.json").exists():
+        sys.exit(f"Qwen3-ASR model missing: run `{sys.executable} {__file__} --download`")
+    model = load(str(MODEL_DIR))
     hotwords = glossary_terms() or None               # 전문용어를 "이 녹음에 나올 수 있는 단어"로 알려줌
     audio, sr = sf.read(src, dtype="float32")
     assert sr == SR, sr
