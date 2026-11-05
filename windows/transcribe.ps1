@@ -86,6 +86,8 @@ function Detect-Lang([string]$wav, [double]$dur) {
 $Abbrev = @('mr', 'mrs', 'ms', 'dr', 'prof', 'st', 'vs', 'etc', 'e.g', 'i.e', 'jr', 'sr', 'no', 'fig', 'u.s')
 function Format-Sentences([string[]]$lines, [string]$lang) {
   $text = (@($lines | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ' ') -replace '\s+', ' '
+  # 인트로 음악을 글자 하나로 받아적는 경우가 있어 맨 앞의 엉뚱한 한 글자를 지움 ("V안녕하세요", "rHello")
+  $text = [regex]::Replace($text.TrimStart(), '^(?:[a-df-hj-z](?=[A-Z][a-z])|[A-Za-z](?=[가-힣])|[가-힣](?=[A-Z]))', '')
   $out = New-Object System.Collections.Generic.List[string]
   $start = 0
   foreach ($m in [regex]::Matches($text, '[.?!]+["'')\]]*\s+')) {
